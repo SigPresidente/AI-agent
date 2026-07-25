@@ -1,5 +1,6 @@
 import os
 
+
 def get_files_info(working_directory, directory="."):
     try :
         working_dir_abs = os.path.abspath(working_directory) #Returns complete dir path of working scope
@@ -9,7 +10,7 @@ def get_files_info(working_directory, directory="."):
             return (f'Error: Cannot list "{directory}" as it is outside the permitted working directory')
         if not os.path.isdir(target_dir) :
             return (f'Error: "{directory}" is not a directory')
-    except Exception as e :
+    except Exception as e :  # noqa: BLE001
         return (f'Error: {e}')
     
     file_info = []
@@ -19,7 +20,7 @@ def get_files_info(working_directory, directory="."):
             file_size = os.path.getsize(item_path)
             file_is_dir = os.path.isdir(item_path)
             file_info.append(f"- {item}: file_size={file_size} bytes, is_dir={file_is_dir}")
-        except Exception as e :
+        except Exception as e :  # noqa: BLE001
             return (f"Error: {e}")
     return "\n".join(file_info)
 

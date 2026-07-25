@@ -1,5 +1,7 @@
 import os
+
 from config import CHAR_LIMIT
+
 
 def get_file_content(working_directory: str, file_path: str) -> str :
     try :
@@ -15,7 +17,23 @@ def get_file_content(working_directory: str, file_path: str) -> str :
             if f.read(1):
                 file_content_string += f'[...File "{file_path}" truncated at {CHAR_LIMIT} characters]'
         return file_content_string
-    except Exception as e :
+    except Exception as e :  # noqa: BLE001
         return (f'Error: {e}')
 
-    
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Access and read content of a specific file, in a specified directory",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "Directory path to list files from, relative to the working directory (default is the working directory itself)",
+                },
+            },
+            "required": ["file_path"]
+        },
+    },
+}  
