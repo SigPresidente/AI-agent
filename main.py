@@ -1,11 +1,10 @@
 import argparse
-import json
 import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from call_function import available_functions
+from call_function import available_functions, call_function
 from prompts import system_prompt
 
 load_dotenv()
@@ -43,9 +42,13 @@ def main():
     print(response.choices[0].message.content)
     message = response.choices[0].message
 
-    for tool_call in message.tool_calls:
-        function_args = json.loads(tool_call.function.arguments or "{}")
-        print(f"Calling function: {tool_call.function.name}({function_args})")
+    if message.tool_calls :
+        for tool_call in message.tool_calls:
+            result_message = call_function(tool_call, args.verbose)
+            if (result_message['content'] is None) or (result_message['content'] == "") :
+                raise Exception("result message is empty")  # noqa: TRY002
+            if args.verbose :
+                print(f"-> {result_message['content']}")
 
 
 if __name__ == "__main__":
