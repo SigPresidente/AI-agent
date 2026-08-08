@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -25,30 +26,39 @@ def main():
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": args.user_prompt},
     ]
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        temperature=0,
-        tools=available_functions
-    )
-    if response.usage is None:
-        raise RuntimeError("usage metadata not found")
-    if args.verbose:
-        print(
-            f"User prompt: {args.user_prompt}\n"
-            f"Prompt tokens: {response.usage.prompt_tokens}\n"
-            f"Response tokens: {response.usage.completion_tokens}"
-        )
-    print(response.choices[0].message.content)
-    message = response.choices[0].message
 
-    if message.tool_calls :
-        for tool_call in message.tool_calls:
-            result_message = call_function(tool_call, args.verbose)
-            if (result_message['content'] is None) or (result_message['content'] == "") :
-                raise Exception("result message is empty")  # noqa: TRY002
-            if args.verbose :
-                print(f"-> {result_message['content']}")
+    for _ in range(20) : # call the model, handle responses
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            temperature=0,
+            tools=available_functions
+        )
+        if response.usage is None:
+            raise RuntimeError("usage metadata not found")
+        if args.verbose:
+            print(
+                f"User prompt: {args.user_prompt}\n"
+                f"Prompt tokens: {response.usage.prompt_tokens}\n"
+                f"Response tokens: {response.usage.completion_tokens}"
+            )
+        message = response.choices[0].message
+        messages.append(message)
+
+        if message.tool_calls :
+            for tool_call in message.tool_calls:
+                result_message = call_function(tool_call, args.verbose)
+                if (result_message['content'] is None) or (result_message['content'] == "") :
+                    raise Exception("result message is empty")
+                if args.verbose :
+                    print(f"-> {result_message['content']}")
+                messages.append(result_message)
+        else:
+            print(message.content)
+            return
+
+        if _ == 19 :
+            sys.exit(1)
 
 
 if __name__ == "__main__":
